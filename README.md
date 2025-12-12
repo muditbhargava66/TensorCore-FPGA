@@ -1,10 +1,14 @@
+<div align="center">
+
 # TensorCore-FPGA
 
 > A high-performance LLM accelerator featuring Systolic Arrays and Vector Processing Units, targeting Xilinx Zynq FPGAs.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![FPGA: Zynq-7020](https://img.shields.io/badge/FPGA-Zynq--7020-blue.svg)](https://www.xilinx.com/products/silicon-devices/soc/zynq-7000.html)
 [![Board: PYNQ-Z1](https://img.shields.io/badge/Board-PYNQ--Z1-green.svg)](https://www.tulembedded.com/FPGA/ProductsPYNQ-Z1.html)
+
+</div>
 
 ## Overview
 
@@ -124,20 +128,20 @@ make report        # Full flow with area/power
 │                        TensorCore                            │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
-│  ┌────────────┐    ┌─────────────────┐    ┌────────────┐    │
-│  │  Control   │───▶│   Systolic      │───▶│    VPU     │    │
-│  │  (Tiling)  │    │   Array (MxN)   │    │ (Softmax)  │    │
-│  └────────────┘    └─────────────────┘    └────────────┘    │
+│  ┌────────────┐    ┌─────────────────┐    ┌────────────┐     │
+│  │  Control   │───▶│   Systolic      │───▶│    VPU     │     │
+│  │  (Tiling)  │    │   Array (MxN)   │    │ (Softmax)  │     │
+│  └────────────┘    └─────────────────┘    └────────────┘     │
 │        │                   │                    │            │
 │        ▼                   ▼                    ▼            │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │                    Memory Subsystem                   │   │
-│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐    │
+│  │                    Memory Subsystem                  │    │
+│  └──────────────────────────────────────────────────────┘    │
 │                                                              │
 ├──────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐                      ┌──────────────────┐  │
-│  │ PerfMonitor │                      │  AXI4-Lite (PS)  │  │
-│  └─────────────┘                      └──────────────────┘  │
+│  ┌─────────────┐                      ┌──────────────────┐   │
+│  │ PerfMonitor │                      │  AXI4-Lite (PS)  │   │
+│  └─────────────┘                      └──────────────────┘   │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -165,7 +169,7 @@ This is an academic project for the Hardware for AI course. Contributions and fe
 
 ## License
 
-MIT License - See [LICENSE](LICENSE) for details.
+Licensed under the Apache License, Version 2.0 - See [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
