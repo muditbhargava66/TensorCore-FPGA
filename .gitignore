@@ -1,0 +1,29 @@
+# Compilation artifacts
+*.o
+*.out
+*.so
+*.dylib
+*.dll
+
+# Simulation outputs
+*.vcd
+*.fst
+*.wave
+sim_result
+sim_vpu
+run_sa_test
+verilator_test
+
+# Verilator generated
+obj_dir/
+
+# SystemC generated
+hai-processor/verification/systemc_tb/run_sa_test
+
+# Temporary files
+*.swp
+*.log
+.DS_Store
+
+# Documentation build (if any)
+docs/build/
