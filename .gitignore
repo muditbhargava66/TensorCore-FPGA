@@ -73,12 +73,16 @@ usage_statistics_webtalk.xml
 openroad/results/
 openroad/reports/
 openroad/logs/
+tensorcore/openroad/results/
+tensorcore/openroad/reports/
+tensorcore/openroad/logs/
 *.blif
-*.json
+synth.json
 *.odb
 *.def
 *.lef
 *.sdc.out
+!openlane/config.json
 
 # -----------------------------------------------------------------------------
 # macOS

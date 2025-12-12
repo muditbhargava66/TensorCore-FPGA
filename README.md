@@ -39,40 +39,37 @@ TensorCore-FPGA is a hardware accelerator architecture optimized for Large Langu
 ## Directory Structure
 
 ```
-tensorcore/
-├── rtl/
-│   ├── core/                    # Synthesizable RTL
-│   │   ├── TensorCore.v         # Top-level integrated processor
-│   │   ├── Control.v            # Tiling state machine
-│   │   ├── MatMul_Controller.v  # Systolic array scheduler
-│   │   ├── SA_MxN.v             # Systolic array (behavioral)
-│   │   ├── SA_MxN_Synth.v       # Systolic array (synthesizable)
-│   │   ├── PE.v / PE_Synth.v    # Processing elements
-│   │   ├── VPU.v / VPU_Synth.v  # Vector processing units
-│   │   ├── MAC.v                # Synthesizable MAC IP
-│   │   ├── PerfMonitor.v        # Performance counters
-│   │   └── Memory.v             # Behavioral memory model
-│   └── include/
-│       ├── system_defs.vh       # System parameters
-│       └── fixed_point_pkg.vh   # Q16.16 fixed-point definitions
-├── vivado/                      # Xilinx FPGA targeting
-│   ├── constraints/             # XDC pin/timing constraints
-│   ├── src/                     # AXI wrapper for PS-PL
-│   └── tcl/                     # Project creation scripts
-├── openroad/                    # ASIC synthesis flow
-│   ├── scripts/                 # Yosys/OpenROAD TCL
-│   ├── constraint.sdc           # Timing constraints
-│   └── Makefile                 # Synthesis automation
-├── model/
-│   ├── systemc/                 # Behavioral golden models
-│   └── spice/                   # 6T/8T SRAM cells
-├── verification/
-│   ├── verilator/               # Verilog testbenches
-│   └── systemc_tb/              # SystemC tests
-└── scripts/                     # Build automation
-    ├── verify_macos.sh          # macOS verification
-    └── build_vivado.bat         # Windows Vivado build
+TensorCore-FPGA/
+├── tensorcore/                  # Main RTL and FPGA files
+│   ├── rtl/
+│   │   ├── core/                # Synthesizable RTL
+│   │   │   ├── TensorCore.v     # Top-level integrated processor
+│   │   │   ├── Control.v        # Tiling state machine
+│   │   │   ├── SA_MxN_Synth.v   # Synthesizable systolic array
+│   │   │   ├── PE_Synth.v       # Synthesizable PE
+│   │   │   ├── VPU_Synth.v      # Synthesizable VPU
+│   │   │   ├── PerfMonitor.v    # Performance counters
+│   │   │   └── ...
+│   │   └── include/             # Verilog headers
+│   ├── vivado/                  # Xilinx FPGA targeting
+│   │   ├── constraints/         # XDC for PYNQ-Z1
+│   │   ├── src/                 # AXI wrapper for PS-PL
+│   │   └── tcl/                 # Project/BD/impl/bitstream scripts
+│   ├── openroad/                # ASIC flow (SKY130)
+│   │   └── scripts/             # synth/floorplan/place/cts/route/finish
+│   ├── verification/            # Testbenches
+│   └── scripts/                 # Build automation
+├── openlane/                    # OpenLANE ASIC configuration
+│   ├── config.json
+│   └── pin_order.cfg
+├── pynq/                        # PYNQ Python driver
+│   ├── tensorcore/              # Python package
+│   └── notebooks/               # Jupyter demos
+├── software/                    # Bare-metal drivers
+│   └── driver/                  # C driver for Vitis
+└── .github/workflows/           # CI/CD
 ```
+
 
 ## Quick Start
 

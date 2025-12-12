@@ -1,0 +1,104 @@
+# TensorCore-FPGA CI/CD Pipeline
+# Runs simulation and syntax checks on push/PR
+
+name: Simulate
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  simulate:
+    name: RTL Simulation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install Icarus Verilog
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+      
+      - name: Check Verilog syntax
+        run: |
+          cd tensorcore/rtl
+          iverilog -g2012 -I include -I core -o /dev/null core/*.v
+          echo "✓ All RTL files compile successfully"
+      
+      - name: Run testbench simulation
+        run: |
+          cd tensorcore/verification/verilator
+          make build
+          make run 2>&1 | tee simulation.log
+          
+          # Check for VPU test passing
+          if grep -q "VPU TEST PASSED" simulation.log; then
+            echo "✓ VPU test passed"
+          else
+            echo "✗ VPU test failed or not found"
+            exit 1
+          fi
+      
+      - name: Upload simulation log
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: simulation-log
+          path: tensorcore/verification/verilator/simulation.log
+
+  lint:
+    name: Verilog Linting
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install Verilator
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y verilator
+      
+      - name: Lint with Verilator
+        run: |
+          cd tensorcore/rtl
+          verilator --lint-only -Wall -I include -I core core/PE_Synth.v || true
+          verilator --lint-only -Wall -I include -I core core/MAC.v || true
+          echo "Linting complete (warnings expected for behavioral code)"
+
+  synth-check:
+    name: Synthesis Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install Yosys
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yosys
+      
+      - name: Run quick synthesis
+        run: |
+          cd tensorcore/rtl
+          yosys -p "
+            read_verilog -I include -I core core/MAC.v;
+            read_verilog -I include -I core core/PE_Synth.v;
+            hierarchy -top PE_Synth;
+            proc;
+            opt;
+            stat
+          " 2>&1 | tee synth.log
+          
+          echo "Synthesis statistics generated"
+      
+      - name: Upload synthesis log
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthesis-log
+          path: tensorcore/rtl/synth.log

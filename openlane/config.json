@@ -1,0 +1,37 @@
+{
+    "DESIGN_NAME": "TensorCore",
+    "VERILOG_FILES": "dir::../tensorcore/rtl/core/*.v",
+    "CLOCK_PORT": "clk",
+    "CLOCK_PERIOD": 10.0,
+    
+    "pdk::sky130*": {
+        "CLOCK_PERIOD": 10.0,
+        "FP_CORE_UTIL": 40,
+        "PL_TARGET_DENSITY": 0.5,
+        "SYNTH_STRATEGY": "AREA 0",
+        "FP_PDN_MULTILAYER": true
+    },
+    
+    "DIE_AREA": "0 0 2000 2000",
+    "FP_SIZING": "absolute",
+    
+    "FP_PIN_ORDER_CFG": "dir::pin_order.cfg",
+    
+    "PL_BASIC_PLACEMENT": false,
+    "PL_TIME_DRIVEN": true,
+    "PL_ROUTABILITY_DRIVEN": true,
+    
+    "GLB_RT_ADJUSTMENT": 0.1,
+    "GLB_RT_OVERFLOW_ITERS": 50,
+    
+    "ROUTING_CORES": 4,
+    
+    "RUN_CVC": false,
+    "RUN_KLAYOUT_XOR": false,
+    "RUN_KLAYOUT_DRC": true,
+    
+    "DIODE_INSERTION_STRATEGY": 4,
+    
+    "RUN_LINTER": true,
+    "LINTER_INCLUDE_PDK_MODELS": true
+}
