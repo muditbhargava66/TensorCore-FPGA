@@ -53,6 +53,34 @@
 
 ---
 
+## 🎯 ASIC Layout (TinyTapeout)
+
+The design has been hardened for TinyTapeout using the SKY130 PDK:
+
+![TensorCore GDS Layout](docs/images/gds_render.png)
+
+**Layout Specifications:**
+- **Die Size:** 196.2 µm × 201.5 µm
+- **Cell Count:** 88 standard cells
+- **Layers:** 40 metal/via layers
+- **PDK:** Skywater SKY130
+
+---
+
+## 📈 SPICE Simulation
+
+6T SRAM cell characterization using ngspice (TSMC 180nm):
+
+![SRAM Read Waveform](docs/images/sram_6t_read_waveform.png)
+
+**Waveform Analysis:**
+- **BL/BL_bar:** Bit lines start pre-charged, develop differential on read
+- **WL:** Word line activates to enable cell access
+- **Q/Qbar:** Storage nodes maintain stable voltage (~1.7V)
+- **Sense Amp:** Amplifies differential to rail-to-rail output
+
+---
+
 ## 🛠️ Quick Start
 
 ### Prerequisites
