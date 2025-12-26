@@ -21,34 +21,35 @@
 | Feature | Description |
 |---------|-------------|
 | **Systolic Arrays** | 2x2 (TinyTapeout) and 4x4 (FPGA) configurations |
-| **Weight Stationary** | Optimized dataflow for inference |
-| **8-bit Signed MAC** | Multiply-accumulate with saturation |
+| **24-bit Accumulator** | Extended precision for many accumulations |
+| **Weight Double-Buffering** | Overlap weight loading with computation |
+| **INT8 Quantization** | 8-bit signed arithmetic with saturation |
 | **VPU** | L2 Normalization + FlashAttention Softmax |
 | **Multi-Target** | FPGA (PYNQ-Z1) + ASIC (TinyTapeout/SKY130) |
 | **AXI4-Lite** | PS-PL control interface |
-| **Performance Monitor** | Cycle counters and memory tracking |
 
 ---
 
-## 📊 TinyTapeout ASIC Results
+## 📊 Design Metrics
 
-| Metric | 2x2 Array | 4x4 Array |
-|--------|-----------|-----------|
-| **MACs** | 4 | 16 |
-| **Cells** | 2,872 | ~10,000 |
-| **Utilization** | 49.4% | ~85% |
-| **Clock** | 50 MHz | 50 MHz |
-| **Throughput** | 200 MMAC/s | 800 MMAC/s |
+| Configuration | MACs | Cells | Wires | Target |
+|---------------|------|-------|-------|--------|
+| **2x2 Array** | 4 | 199 | 265 | TinyTapeout |
+| **4x4 Array** | 16 | 628 | 796 | FPGA |
+
+### Processing Element Features
+- **24-bit accumulator** - Prevents overflow in deep networks
+- **Weight double-buffering** - Load next tile while computing
+- **INT8 saturation** - Clamps output to [-128, 127]
 
 ### Verification Status
 
 | Check | Status |
 |-------|--------|
-| DRC | ✅ Passed |
-| LVS | ✅ Passed |
-| Antenna | ✅ Passed |
-| Timing | ✅ 2.34ns slack |
-| Cocotb | ✅ 6/6 tests |
+| Cocotb Tests | ✅ 6/6 Passing |
+| Yosys Synthesis | ✅ 199 cells (2x2) |
+| Verilator Lint | ✅ Clean |
+| SPICE Simulation | ✅ 2,134 rows |
 
 ---
 
@@ -61,7 +62,7 @@
 sudo apt install iverilog verilator yosys ngspice
 
 # Python packages
-pip install cocotb pytest librelane volare
+pip install cocotb pytest
 ```
 
 ### Run Tests
@@ -76,14 +77,6 @@ cd test && make clean && make
 yosys scripts/synth_check.ys
 ```
 
-### TinyTapeout Hardening
-
-```bash
-pip install librelane volare
-volare enable sky130 --pdk-root ~/.volare
-python3 tt/tt_tool.py --harden
-```
-
 ---
 
 ## 📁 Project Structure
@@ -93,16 +86,14 @@ TensorCore-FPGA/
 ├── src/
 │   ├── core/           # Full TensorCore (12 modules)
 │   ├── tt/             # TinyTapeout designs
-│   │   ├── ProcessingElement.v
-│   │   ├── SystolicArray2x2.v  (TT target)
-│   │   ├── SystolicArray4x4.v  (FPGA target)
-│   │   └── tt_um_tensorcore.v
+│   │   ├── ProcessingElement.v   # Enhanced PE (24-bit acc)
+│   │   ├── SystolicArray2x2.v    # 4 MACs (TT target)
+│   │   ├── SystolicArray4x4.v    # 16 MACs (FPGA)
+│   │   └── tt_um_tensorcore.v    # Top module
 │   └── include/        # Verilog headers
 ├── test/               # Cocotb testbench
 ├── scripts/            # EDA tool scripts
-├── model/
-│   ├── spice/          # SRAM simulations
-│   └── systemc/        # Behavioral models
+├── model/              # SPICE & SystemC models
 ├── vivado/             # Xilinx FPGA flow
 ├── pynq/               # Python drivers
 └── docs/               # Documentation
@@ -122,31 +113,6 @@ TensorCore-FPGA/
 | **Magic** | DRC | ✅ |
 | **Netgen** | LVS | ✅ |
 | **KLayout** | GDS viewer | ✅ |
-| **LibreLane** | TT hardening | ✅ |
-
----
-
-## 📈 Verification Scripts
-
-```bash
-# Cocotb tests
-cd test && make
-
-# Gate-level simulation
-make GATES=yes
-
-# Coverage collection
-make COVERAGE=yes
-
-# Verilator lint
-bash scripts/verilator_lint.sh
-
-# SPICE simulation
-cd model/spice && ngspice -b sram_6t_read_svg.cir
-
-# Power analysis
-bash scripts/power_analysis.sh
-```
 
 ---
 
@@ -182,7 +148,6 @@ bash scripts/power_analysis.sh
 | [Architecture](docs/ARCHITECTURE.md) | System design |
 | [TinyTapeout](docs/TINYTAPEOUT.md) | ASIC guide |
 | [Simulation](docs/SIMULATION.md) | Running tests |
-| [References](docs/REFERENCES.md) | Research papers |
 | [Changelog](CHANGELOG.md) | Version history |
 
 ---
@@ -206,5 +171,4 @@ Apache License 2.0 - See [LICENSE](LICENSE)
 
 - [TinyTapeout](https://tinytapeout.com) - ASIC platform
 - [Skywater PDK](https://skywater-pdk.readthedocs.io/) - Open PDK
-- [OpenROAD](https://openroad.readthedocs.io/) - ASIC flow
 - [Cocotb](https://www.cocotb.org/) - Python testbench

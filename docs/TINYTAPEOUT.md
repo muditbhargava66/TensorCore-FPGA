@@ -1,10 +1,10 @@
 # TinyTapeout ASIC Design Guide
 
-This document describes how to build and verify the TinyTapeout-compatible TensorCore design.
+This document describes the TinyTapeout-compatible TensorCore design.
 
 ## Overview
 
-The TinyTapeout design is a **2x2 Systolic Array** implementing 4 MAC (Multiply-Accumulate) units for neural network acceleration.
+The TinyTapeout design is a **2x2 Systolic Array** implementing 4 MAC units for neural network acceleration.
 
 ### Specifications
 
@@ -12,11 +12,34 @@ The TinyTapeout design is a **2x2 Systolic Array** implementing 4 MAC (Multiply-
 |---------------|-------|
 | **Design Name** | `tt_um_tensorcore` |
 | **Clock Frequency** | 50 MHz |
-| **Data Width** | 8-bit signed |
+| **Data Width** | 8-bit signed (INT8) |
 | **MAC Units** | 4 (2x2 array) |
-| **Cell Count** | 2,872 |
-| **Area** | 42,826 μm² |
-| **Utilization** | 49.4% |
+| **Accumulator** | 24-bit internal |
+| **Cell Count** | 199 (pre-mapping) |
+
+---
+
+## Key Features
+
+### 1. 24-bit Accumulator
+Extended precision prevents overflow during deep network inference:
+```verilog
+reg signed [23:0] accumulator;  // 24-bit for many accumulations
+```
+
+### 2. Weight Double-Buffering
+Overlap weight loading with computation:
+```verilog
+reg signed [7:0] weight_active;  // In use
+reg signed [7:0] weight_shadow;  // Preloading next tile
+```
+
+### 3. INT8 Saturation
+Output clamped to valid INT8 range:
+```verilog
+assign saturated = (accumulator > 127) ? 127 :
+                   (accumulator < -128) ? -128 : accumulator[7:0];
+```
 
 ---
 
@@ -36,13 +59,6 @@ Row1       │          │
         Result     Result
 ```
 
-### Processing Element (PE)
-
-Each PE performs:
-- **MAC**: `accumulator += activation × weight`
-- **Saturation**: 8-bit output with overflow detection
-- **Systolic flow**: Data passes to neighbors
-
 ---
 
 ## Pin Mapping
@@ -55,24 +71,7 @@ Each PE performs:
 | `ui_in[6]` | Row select |
 | `ui_in[7]` | Mode[1] |
 
-### Output Pins (`uo_out`)
-
-| Pin | Function |
-|-----|----------|
-| `uo_out[7:0]` | Selected PE result |
-
-### Bidirectional Pins (`uio`)
-
-| Pin | Input | Output |
-|-----|-------|--------|
-| `uio[5:0]` | Weight data | - |
-| `uio[6]` | Column select | - |
-| `uio[7]` | - | State[1] |
-| `uio[3:0]` | - | Overflow flags |
-
----
-
-## Control Modes
+### Control Modes
 
 | Mode | `ui_in[7:6]` | Function |
 |------|--------------|----------|
@@ -85,39 +84,13 @@ Each PE performs:
 
 ## Quick Start
 
-### Prerequisites
-
 ```bash
-pip install librelane volare cocotb
-volare enable sky130 --pdk-root ~/.volare
+# Run tests
+cd test && make
+
+# Synthesize
+yosys scripts/synth_check.ys
 ```
-
-### Run Tests
-
-```bash
-cd test
-make clean && make
-```
-
-### Harden Design
-
-```bash
-python3 tt/tt_tool.py --create-user-config
-python3 tt/tt_tool.py --harden
-python3 tt/tt_tool.py --create-png
-```
-
----
-
-## Verification Results
-
-| Check | Status |
-|-------|--------|
-| DRC | ✅ Passed |
-| LVS | ✅ Passed |
-| Antenna | ✅ Passed |
-| Setup Timing | ✅ 2.34ns slack |
-| Hold Timing | ✅ 0.108ns slack |
 
 ---
 
@@ -125,15 +98,7 @@ python3 tt/tt_tool.py --create-png
 
 | File | Description |
 |------|-------------|
-| [`src/tt/tt_um_tensorcore.v`](../src/tt/tt_um_tensorcore.v) | Top module |
-| [`src/tt/ProcessingElement.v`](../src/tt/ProcessingElement.v) | PE with MAC |
-| [`src/tt/SystolicArray2x2.v`](../src/tt/SystolicArray2x2.v) | 2x2 array |
-| [`src/tt/config.json`](../src/tt/config.json) | OpenLane config |
-
----
-
-## References
-
-- [TinyTapeout Documentation](https://tinytapeout.com/specs/)
-- [Skywater PDK](https://skywater-pdk.readthedocs.io/)
-- [OpenLane2 Documentation](https://openlane2.readthedocs.io/)
+| `ProcessingElement.v` | Enhanced PE (24-bit acc) |
+| `SystolicArray2x2.v` | 2x2 array (4 MACs) |
+| `SystolicArray4x4.v` | 4x4 array (16 MACs) |
+| `tt_um_tensorcore.v` | Top module |

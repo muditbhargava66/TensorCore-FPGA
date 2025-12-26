@@ -3,11 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  *
  * Enhanced Processing Element for TinyTapeout
+ * 
  * Features:
  * - 8-bit signed MAC (Multiply-Accumulate)
- * - Systolic data flow (pass-through for array connectivity)
- * - Pipeline registers for timing
+ * - 24-bit internal accumulator for extended precision
+ * - Weight double-buffering for overlapped loading
+ * - Systolic data flow with pipeline registers
  * - Saturation arithmetic with overflow detection
+ * - INT8 quantization support
  */
 
 `default_nettype none
@@ -18,8 +21,8 @@ module pe_enhanced (
     input  wire        enable,
     
     // Control
-    input  wire        clear_acc,    // Clear accumulator
-    input  wire        load_weight,  // Load weight register
+    input  wire        clear_acc,      // Clear accumulator
+    input  wire        load_weight,    // Load weight register
     
     // Systolic data inputs
     input  wire signed [7:0] data_in,     // Activation from left
@@ -30,60 +33,87 @@ module pe_enhanced (
     output reg  signed [7:0] weight_out,  // Weight to bottom
     
     // Result outputs
-    output reg  signed [7:0] acc_out,     // Accumulated result (saturated)
+    output reg  signed [7:0] acc_out,     // Accumulated result (saturated to INT8)
     output wire              overflow     // Overflow indicator
 );
 
-    // Internal registers
-    (* max_fanout = 8 *) reg signed [7:0]  weight_reg;    // Stationary weight
-    reg signed [15:0] accumulator;   // Extended precision accumulator
+    // =========================================================================
+    // Weight Double-Buffering
+    // =========================================================================
+    (* max_fanout = 8 *) reg signed [7:0] weight_active;   // Active weight
+    (* max_fanout = 8 *) reg signed [7:0] weight_shadow;   // Shadow for preload
+    reg weight_pending;
+    
+    // =========================================================================
+    // 24-bit Accumulator (extended precision for many accumulations)
+    // =========================================================================
+    reg signed [23:0] accumulator;
     
     // MAC computation
     wire signed [15:0] product;
-    wire signed [16:0] acc_next;
+    wire signed [24:0] acc_next;
     
-    assign product = data_in * weight_reg;
-    assign acc_next = {accumulator[15], accumulator} + {product[15], product};
+    assign product = data_in * weight_active;
+    assign acc_next = {accumulator[23], accumulator} + {{9{product[15]}}, product};
     
-    // Overflow detection
-    assign overflow = (acc_next[16] != acc_next[15]);
+    // =========================================================================
+    // Overflow Detection
+    // =========================================================================
+    assign overflow = (acc_next[24] != acc_next[23]);
     
-    // Saturation logic for 8-bit output
+    // =========================================================================
+    // INT8 Saturation Logic
+    // =========================================================================
     wire signed [7:0] saturated;
-    assign saturated = (accumulator > 16'sd127)  ? 8'sd127 :
-                       (accumulator < -16'sd128) ? -8'sd128 :
+    assign saturated = (accumulator > 24'sd127)  ? 8'sd127 :
+                       (accumulator < -24'sd128) ? -8'sd128 :
                        accumulator[7:0];
     
+    // =========================================================================
+    // Sequential Logic
+    // =========================================================================
     always @(posedge clk) begin
         if (!rst_n) begin
-            weight_reg  <= 8'd0;
-            accumulator <= 16'd0;
-            acc_out     <= 8'd0;
-            data_out    <= 8'd0;
-            weight_out  <= 8'd0;
+            weight_active <= 8'd0;
+            weight_shadow <= 8'd0;
+            weight_pending <= 1'b0;
+            accumulator <= 24'd0;
+            acc_out <= 8'd0;
+            data_out <= 8'd0;
+            weight_out <= 8'd0;
         end else if (enable) begin
-            // Weight loading
+            // Weight loading with double-buffering
             if (load_weight) begin
-                weight_reg <= weight_in;
+                weight_shadow <= weight_in;
+                weight_pending <= 1'b1;
+            end
+            
+            // Swap shadow to active when clearing accumulator (new tile)
+            if (clear_acc && weight_pending) begin
+                weight_active <= weight_shadow;
+                weight_pending <= 1'b0;
+            end else if (load_weight && !weight_pending) begin
+                // Direct load if no pending
+                weight_active <= weight_in;
             end
             
             // Accumulator control
             if (clear_acc) begin
-                accumulator <= 16'd0;
+                accumulator <= 24'd0;
             end else begin
-                // Accumulate with saturation
+                // MAC with saturation on overflow
                 if (overflow) begin
-                    accumulator <= acc_next[16] ? -16'sd32768 : 16'sd32767;
+                    accumulator <= acc_next[24] ? -24'sd8388608 : 24'sd8388607;
                 end else begin
-                    accumulator <= acc_next[15:0];
+                    accumulator <= acc_next[23:0];
                 end
             end
             
-            // Systolic data flow - pass through with register
-            data_out   <= data_in;
+            // Systolic data flow
+            data_out <= data_in;
             weight_out <= weight_in;
             
-            // Update output register
+            // Output register
             acc_out <= saturated;
         end
     end
