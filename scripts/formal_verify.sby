@@ -1,0 +1,16 @@
+# SymbiYosys Formal Verification Script
+# Verifies key properties of Processing Element
+
+[options]
+mode bmc
+depth 20
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal src/tt/ProcessingElement.v
+prep -top pe_enhanced
+
+[files]
+src/tt/ProcessingElement.v

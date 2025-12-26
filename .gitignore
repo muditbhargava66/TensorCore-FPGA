@@ -180,3 +180,7 @@ site/
 !scripts/*.ys
 !scripts/*.sh
 tt/
+!src/tt/*.v
+!scripts/*.sdc
+!scripts/*.sby
+!scripts/*.sv

@@ -1,6 +1,4 @@
 # TensorCore-FPGA CI/CD Pipeline
-# Verifies RTL, runs tests, and checks synthesis
-
 name: CI
 
 on:
@@ -10,109 +8,86 @@ on:
     branches: [main]
 
 jobs:
-  # ========================================
   # RTL Syntax Check
-  # ========================================
   syntax-check:
-    name: RTL Syntax Check
+    name: RTL Syntax
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Install Icarus Verilog
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y iverilog
+        run: sudo apt-get update && sudo apt-get install -y iverilog
+      - name: Check Core RTL
+        run: iverilog -g2012 -I src/include -o /dev/null src/core/*.v
+      - name: Check TinyTapeout RTL
+        run: iverilog -g2012 -o /dev/null src/tt/*.v
 
-      - name: Check Core RTL syntax
-        run: |
-          iverilog -g2012 -I src/include -o /dev/null src/core/*.v
-          echo "✓ Core RTL files compile successfully"
-
-      - name: Check TinyTapeout RTL syntax
-        run: |
-          iverilog -g2012 -o /dev/null src/tt/*.v
-          echo "✓ TinyTapeout RTL files compile successfully"
-
-  # ========================================
   # Cocotb Tests
-  # ========================================
   cocotb-tests:
     name: Cocotb Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y iverilog
+          sudo apt-get update && sudo apt-get install -y iverilog
           pip install cocotb pytest
-
-      - name: Run TinyTapeout tests
-        run: |
-          cd test
-          make clean && make
-          echo "✓ All Cocotb tests passed"
-
-      - name: Upload test artifacts
+      - name: Run tests
+        run: cd test && make clean && make
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results
-          path: |
-            test/results.xml
-            test/tb.vcd
+          path: test/results.xml
           overwrite: true
 
-  # ========================================
   # Verilator Lint
-  # ========================================
   lint:
     name: Verilator Lint
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Install Verilator
+        run: sudo apt-get update && sudo apt-get install -y verilator
+      - name: Lint TinyTapeout
         run: |
-          sudo apt-get update
-          sudo apt-get install -y verilator
+          verilator --lint-only -Wall src/tt/ProcessingElement.v src/tt/SystolicArray2x2.v src/tt/tt_um_tensorcore.v || true
 
-      - name: Lint TinyTapeout design
-        run: |
-          verilator --lint-only -Wall \
-            src/tt/ProcessingElement.v \
-            src/tt/SystolicArray2x2.v \
-            src/tt/tt_um_tensorcore.v || true
-          echo "Linting complete"
-
-  # ========================================
   # Yosys Synthesis
-  # ========================================
   synthesis:
     name: Yosys Synthesis
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Install Yosys
+        run: sudo apt-get update && sudo apt-get install -y yosys
+      - name: Synthesize 2x2 Array
         run: |
-          sudo apt-get update
-          sudo apt-get install -y yosys
-
-      - name: Run synthesis check
+          yosys -p "read_verilog -sv src/tt/*.v; hierarchy -top tt_um_tensorcore; proc; opt; stat" | tee synth_2x2.log
+      - name: Synthesize 4x4 Array
         run: |
-          yosys -Q scripts/synth_check.ys 2>&1 | tee synth.log
-          echo "✓ Synthesis check complete"
-
-      - name: Upload synthesis log
+          yosys -p "read_verilog -sv src/tt/ProcessingElement.v src/tt/SystolicArray4x4.v; hierarchy -top systolic_4x4; proc; opt; stat" | tee synth_4x4.log
+      - name: Upload logs
         uses: actions/upload-artifact@v4
         with:
-          name: synthesis-log
-          path: synth.log
+          name: synthesis-logs
+          path: synth_*.log
           overwrite: true
+
+  # TinyTapeout Hardening (optional - requires PDK)
+  hardening:
+    name: TT Hardening Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install dependencies
+        run: |
+          pip install librelane volare
+          volare enable sky130 --pdk-root $HOME/.volare
+      - name: Create user config
+        run: python3 tt/tt_tool.py --create-user-config || true
+      - name: Check config
+        run: cat src/config.json || echo "Config check skipped"
