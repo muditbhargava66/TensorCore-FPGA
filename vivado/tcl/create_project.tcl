@@ -18,8 +18,8 @@ set part         "xc7z020clg400-1"
 # set board "www.digilentinc.com:pynq-z1:part0:1.0"
 
 # Source directories (relative to tcl/ directory)
-set rtl_dir      "../../rtl/core"
-set include_dir  "../../rtl/include"
+set rtl_dir      "../../src/core"
+set include_dir  "../../src/include"
 set vivado_src   "../src"
 set constraints  "../constraints"
 

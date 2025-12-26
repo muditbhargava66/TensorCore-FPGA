@@ -1,0 +1,39 @@
+# =============================================================================
+# Yosys Synthesis Check Script
+# Verifies design synthesizability with Yosys
+# =============================================================================
+
+# Read Verilog sources - TinyTapeout design
+read_verilog -sv src/tt/ProcessingElement.v
+read_verilog -sv src/tt/SystolicArray2x2.v
+read_verilog -sv src/tt/tt_um_tensorcore.v
+
+# Elaborate hierarchy
+hierarchy -check -top tt_um_tensorcore
+
+# High-level synthesis
+proc
+
+# Flatten design
+flatten
+
+# Technology mapping (generic)
+techmap
+
+# Optimize
+opt -full
+
+# ABC mapping for generic gates
+abc -g gates,AND,OR,XOR,MUX,AOI3,OAI3,AOI4,OAI4
+
+# Clean up
+opt_clean
+
+# Statistics
+stat
+
+# Write output
+write_verilog scripts/synth_generic.v
+
+# Print success
+log "=== TinyTapeout Synthesis Check Complete ==="

@@ -44,6 +44,7 @@ SC_MODULE(PE)
     bool first_write;
 
     // Custom Constructor with IDs
+    SC_HAS_PROCESS(PE);
     PE(sc_module_name name, int array_id, int row_id, int col_id) : 
       sc_module(name), array_id(array_id), row_id(row_id), col_id(col_id), 
       first_write(true), drain_value_sent(false)

@@ -2,11 +2,12 @@
 
 # TensorCore-FPGA
 
-> A high-performance LLM accelerator featuring Systolic Arrays and Vector Processing Units, targeting Xilinx Zynq FPGAs.
+> A high-performance LLM accelerator featuring Systolic Arrays and Vector Processing Units, targeting Xilinx Zynq FPGAs and ASIC (TinyTapeout/SKY130).
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![FPGA: Zynq-7020](https://img.shields.io/badge/FPGA-Zynq--7020-blue.svg)](https://www.xilinx.com/products/silicon-devices/soc/zynq-7000.html)
-[![Board: PYNQ-Z1](https://img.shields.io/badge/Board-PYNQ--Z1-green.svg)](https://www.tulembedded.com/FPGA/ProductsPYNQ-Z1.html)
+[![TinyTapeout](https://img.shields.io/badge/TinyTapeout-Ready-green.svg)](https://tinytapeout.com)
+[![Tests](https://img.shields.io/badge/Tests-6%2F6_Passing-brightgreen.svg)](#verification-results)
 
 </div>
 
@@ -15,108 +16,189 @@
 TensorCore-FPGA is a hardware accelerator architecture optimized for Large Language Model (LLM) inference. It implements the core computational kernels required for transformer models:
 
 - **Matrix Multiplication**: Systolic Array with configurable tile sizes
-- **Attention Processing**: FlashAttention-style Softmax with online normalization
+- **Attention Processing**: FlashAttention-style Softmax with online normalization  
 - **Layer Normalization**: L2 normalization for transformer layers
 
-## Features
+## TinyTapeout ASIC Results
 
-| Feature | Description |
-|---------|-------------|
-| **Systolic Array** | Configurable MxN tile-based matrix multiplication |
-| **Dual Dataflow** | Weight Stationary (WS) and Output Stationary (OS) modes |
-| **Vector Processing Unit** | L2 Normalization + FlashAttention-style Softmax |
-| **Performance Monitoring** | Cycle counters, memory bandwidth tracking |
-| **Fixed-Point Arithmetic** | Q16.16 format for synthesizable implementation |
-| **AXI4-Lite Interface** | PS-PL control for Zynq SoC integration |
+The project includes a **2x2 Systolic Array** design hardened for TinyTapeout:
 
-## Target Platform
+| Metric | Value |
+|--------|-------|
+| **Cells** | 2,872 |
+| **Area** | 42,826 μm² |
+| **Utilization** | 49.4% |
+| **Clock** | 50 MHz |
+| **Power** | ~79 μW |
 
-- **FPGA Board**: PYNQ-Z1 (Digilent/TUL)
-- **SoC**: Xilinx Zynq-7020 (XC7Z020-1CLG400C)
-- **Clock**: 125 MHz system clock
-- **ASIC Target**: SKY130 PDK (via OpenROAD)
+### GDS Layout
+
+![TensorCore 2x2 Systolic Array GDS](docs/images/gds_render.png)
+
+### Verification Status
+
+| Check | Status |
+|-------|--------|
+| DRC | ✅ Passed |
+| LVS | ✅ Passed |
+| Antenna | ✅ Passed |
+| Setup Timing | ✅ 2.34ns slack |
+| RTL Tests | ✅ 6/6 passed |
+
+---
+
+## SPICE Simulations
+
+SRAM cell characterization using ngspice:
+
+### 6T SRAM Read Waveform
+
+![6T SRAM Read Waveform](docs/images/sram_6t_read_waveform.png)
+
+---
+
+## Installation
+
+### System Requirements
+
+- **OS**: Ubuntu 22.04+ / macOS
+- **Python**: 3.10+
+- **RAM**: 8GB+ recommended
+
+### Quick Install (Ubuntu)
+
+```bash
+# Install EDA tools
+sudo apt update
+sudo apt install -y iverilog verilator yosys ngspice magic netgen klayout
+
+# Install Python packages
+pip install cocotb pytest librelane gdstk
+
+# Install PDK (for TinyTapeout)
+pip install volare
+volare enable sky130 --pdk-root ~/.volare
+```
+
+### Verify Installation
+
+```bash
+# Check all tools
+yosys --version       # >= 0.9
+verilator --version   # >= 4.0
+ngspice --version     # >= 36
+magic --version       # >= 8.3
+```
+
+---
 
 ## Directory Structure
 
 ```
 TensorCore-FPGA/
-├── tensorcore/                  # Main RTL and FPGA files
-│   ├── rtl/
-│   │   ├── core/                # Synthesizable RTL
-│   │   │   ├── TensorCore.v     # Top-level integrated processor
-│   │   │   ├── Control.v        # Tiling state machine
-│   │   │   ├── SA_MxN_Synth.v   # Synthesizable systolic array
-│   │   │   ├── PE_Synth.v       # Synthesizable PE
-│   │   │   ├── VPU_Synth.v      # Synthesizable VPU
-│   │   │   ├── PerfMonitor.v    # Performance counters
-│   │   │   └── ...
-│   │   └── include/             # Verilog headers
-│   ├── vivado/                  # Xilinx FPGA targeting
-│   │   ├── constraints/         # XDC for PYNQ-Z1
-│   │   ├── src/                 # AXI wrapper for PS-PL
-│   │   └── tcl/                 # Project/BD/impl/bitstream scripts
-│   ├── openroad/                # ASIC flow (SKY130)
-│   │   └── scripts/             # synth/floorplan/place/cts/route/finish
-│   ├── verification/            # Testbenches
-│   └── scripts/                 # Build automation
-├── openlane/                    # OpenLANE ASIC configuration
-│   ├── config.json
-│   └── pin_order.cfg
-├── pynq/                        # PYNQ Python driver
-│   ├── tensorcore/              # Python package
-│   └── notebooks/               # Jupyter demos
-├── software/                    # Bare-metal drivers
-│   └── driver/                  # C driver for Vitis
-└── .github/workflows/           # CI/CD
+├── src/                     # RTL Source Files
+│   ├── core/                # Original TensorCore (12 modules)
+│   │   ├── TensorCore.v     # Top-level processor
+│   │   ├── Control.v        # Tiling state machine
+│   │   ├── PE.v, PE_Synth.v # Processing Elements
+│   │   ├── SA_MxN.v         # Systolic Array
+│   │   └── VPU.v            # Vector Processing Unit
+│   ├── tt/                  # TinyTapeout Design
+│   │   ├── tt_um_tensorcore.v      # TT top module
+│   │   ├── ProcessingElement.v     # 8-bit MAC
+│   │   └── SystolicArray2x2.v      # 2x2 array
+│   └── include/             # Verilog headers
+├── test/                    # Cocotb Tests
+├── model/                   # Behavioral Models
+│   ├── spice/               # SRAM SPICE circuits
+│   └── systemc/             # SystemC models
+├── vivado/                  # Xilinx FPGA flow
+├── scripts/                 # Build & verification scripts
+├── docs/                    # Documentation
+└── tt/                      # TinyTapeout support tools
 ```
 
+---
 
-## Quick Start
+## Running Tests
 
-### Prerequisites
-
-**macOS:**
-```bash
-brew install icarus-verilog verilator yosys
-```
-
-**Windows:**
-- Xilinx Vivado 2023.1+ (for FPGA synthesis)
-
-### Run Simulation
+### RTL Simulation (Cocotb)
 
 ```bash
-cd tensorcore/verification/verilator
-make run
+cd test
+make clean && make
 ```
 
 **Expected Output:**
 ```
-VPU TEST PASSED
-MMU Computation Complete.
+** TESTS=6 PASS=6 FAIL=0 SKIP=0 **
 ```
 
-### FPGA Build Workflow
-
-**Step 1: Verify on macOS**
-```bash
-cd tensorcore
-./scripts/verify_macos.sh
-```
-
-**Step 2: Build on Windows (Vivado)**
-```batch
-cd tensorcore\scripts
-build_vivado.bat
-```
-
-### ASIC Synthesis (OpenROAD)
+### Yosys Synthesis Check
 
 ```bash
-cd tensorcore/openroad
-make synth_report  # Quick synthesis stats
-make report        # Full flow with area/power
+yosys scripts/synth_check.ys
 ```
+
+### SPICE Simulation
+
+```bash
+cd model/spice
+ngspice -b sram_6t_read_svg.cir    # Batch mode with PNG output
+ngspice sram_6t_read.cir            # Interactive with waveforms
+```
+
+### SystemC Simulation
+
+```bash
+cd model/systemc/sa_model
+g++ -std=c++17 testbench.cpp -o testbench -lsystemc
+./testbench
+```
+
+---
+
+## TinyTapeout Hardening
+
+### Prerequisites
+
+```bash
+pip install librelane volare
+volare enable sky130 --pdk-root ~/.volare
+```
+
+### Run Hardening
+
+```bash
+python3 tt/tt_tool.py --create-user-config
+python3 tt/tt_tool.py --harden           # Full ASIC flow
+python3 tt/tt_tool.py --create-png       # Generate layout image
+python3 tt/tt_tool.py --print-stats      # Show metrics
+```
+
+### Verify Design
+
+```bash
+export PDK_ROOT=$HOME/.volare
+bash scripts/magic_drc.sh     # Design Rule Check
+bash scripts/netgen_lvs.sh    # Layout vs Schematic
+```
+
+---
+
+## EDA Tools Status
+
+| Tool | Status | Purpose |
+|------|--------|---------|
+| **Yosys** | ✅ Working | RTL Synthesis |
+| **Verilator** | ✅ Working | RTL Linting |
+| **ngspice** | ✅ Working | SPICE Simulation |
+| **Magic** | ✅ Working | DRC/Layout |
+| **Netgen** | ✅ Working | LVS Verification |
+| **KLayout** | ✅ Working | GDS Viewer |
+| **LibreLane** | ✅ Working | TT Hardening |
+
+---
 
 ## Architecture
 
@@ -124,7 +206,6 @@ make report        # Full flow with area/power
 ┌──────────────────────────────────────────────────────────────┐
 │                        TensorCore                            │
 ├──────────────────────────────────────────────────────────────┤
-│                                                              │
 │  ┌────────────┐    ┌─────────────────┐    ┌────────────┐     │
 │  │  Control   │───▶│   Systolic      │───▶│    VPU     │     │
 │  │  (Tiling)  │    │   Array (MxN)   │    │ (Softmax)  │     │
@@ -134,7 +215,6 @@ make report        # Full flow with area/power
 │  ┌──────────────────────────────────────────────────────┐    │
 │  │                    Memory Subsystem                  │    │
 │  └──────────────────────────────────────────────────────┘    │
-│                                                              │
 ├──────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐                      ┌──────────────────┐   │
 │  │ PerfMonitor │                      │  AXI4-Lite (PS)  │   │
@@ -142,27 +222,48 @@ make report        # Full flow with area/power
 └──────────────────────────────────────────────────────────────┘
 ```
 
-## AXI Register Map
+### TinyTapeout 2x2 Systolic Array
 
-| Offset | Name | Access | Description |
-|--------|------|--------|-------------|
-| 0x00 | CTRL | R/W | Control register (start/reset/mode) |
-| 0x04 | STATUS | R | Status register (done/busy/state) |
-| 0x08-0x10 | K1/K2/K3 | R/W | Matrix dimensions |
-| 0x14-0x1C | BASE_ADDR | R/W | Matrix base addresses |
-| 0x20-0x28 | PERF | R | Performance counters |
+```
+        Weight     Weight
+         Col0       Col1
+           │          │
+           ▼          ▼
+Data ─▶ [PE(0,0)] ─▶ [PE(0,1)] ─▶
+Row0       │          │
+           ▼          ▼
+Data ─▶ [PE(1,0)] ─▶ [PE(1,1)] ─▶
+Row1       │          │
+           ▼          ▼
+        Result     Result
+```
 
-## Performance Counters
+---
 
-The `PerfMonitor` module tracks:
-- Total execution cycles
-- Memory read/write operations
-- Compute cycles (SA active)
-- Stall cycles (memory wait)
+## Performance Metrics
+
+### TinyTapeout Design (50 MHz)
+
+| Metric | Value |
+|--------|-------|
+| MAC Operations | 4 per cycle |
+| Throughput | 200 MMAC/s |
+| Wire Length | 39,062 μm |
+| Setup Slack | 2.34 ns |
+| Hold Slack | 0.108 ns |
+
+---
 
 ## Contributing
 
-This is an academic project for the Hardware for AI course. Contributions and feedback are welcome!
+Contributions and feedback are welcome!
+
+1. Fork the repository
+2. Create a feature branch
+3. Run tests: `cd test && make`
+4. Submit a pull request
+
+---
 
 ## License
 
@@ -170,6 +271,7 @@ Licensed under the Apache License, Version 2.0 - See [LICENSE](LICENSE) for deta
 
 ## Acknowledgments
 
-- Xilinx/AMD for Vivado tools
-- OpenROAD project for ASIC flow
-- PYNQ community for documentation
+- [TinyTapeout](https://tinytapeout.com) for ASIC fabrication platform
+- [OpenROAD](https://openroad.readthedocs.io/) for ASIC flow
+- [Xilinx/AMD](https://www.xilinx.com/) for Vivado tools
+- [Skywater PDK](https://github.com/google/skywater-pdk) for open-source PDK

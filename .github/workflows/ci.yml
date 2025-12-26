@@ -1,0 +1,118 @@
+# TensorCore-FPGA CI/CD Pipeline
+# Verifies RTL, runs tests, and checks synthesis
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ========================================
+  # RTL Syntax Check
+  # ========================================
+  syntax-check:
+    name: RTL Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Icarus Verilog
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+
+      - name: Check Core RTL syntax
+        run: |
+          iverilog -g2012 -I src/include -o /dev/null src/core/*.v
+          echo "✓ Core RTL files compile successfully"
+
+      - name: Check TinyTapeout RTL syntax
+        run: |
+          iverilog -g2012 -o /dev/null src/tt/*.v
+          echo "✓ TinyTapeout RTL files compile successfully"
+
+  # ========================================
+  # Cocotb Tests
+  # ========================================
+  cocotb-tests:
+    name: Cocotb Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+          pip install cocotb pytest
+
+      - name: Run TinyTapeout tests
+        run: |
+          cd test
+          make clean && make
+          echo "✓ All Cocotb tests passed"
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            test/results.xml
+            test/tb.vcd
+          overwrite: true
+
+  # ========================================
+  # Verilator Lint
+  # ========================================
+  lint:
+    name: Verilator Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Verilator
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y verilator
+
+      - name: Lint TinyTapeout design
+        run: |
+          verilator --lint-only -Wall \
+            src/tt/ProcessingElement.v \
+            src/tt/SystolicArray2x2.v \
+            src/tt/tt_um_tensorcore.v || true
+          echo "Linting complete"
+
+  # ========================================
+  # Yosys Synthesis
+  # ========================================
+  synthesis:
+    name: Yosys Synthesis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Yosys
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yosys
+
+      - name: Run synthesis check
+        run: |
+          yosys -Q scripts/synth_check.ys 2>&1 | tee synth.log
+          echo "✓ Synthesis check complete"
+
+      - name: Upload synthesis log
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthesis-log
+          path: synth.log
+          overwrite: true

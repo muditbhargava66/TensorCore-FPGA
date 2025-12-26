@@ -1,0 +1,13 @@
+{
+  "DESIGN_NAME": "tt_um_tensorcore",
+  "VERILOG_FILES": [
+    "dir::tt/ProcessingElement.v",
+    "dir::tt/SystolicArray2x2.v",
+    "dir::tt/tt_um_tensorcore.v"
+  ],
+  "DIE_AREA": "0 0 161.00 111.52",
+  "FP_DEF_TEMPLATE": "dir::../tt/tech/sky130A/def/tt_block_1x1_pg.def",
+  "VDD_PIN": "VPWR",
+  "GND_PIN": "VGND",
+  "RT_MAX_LAYER": "met4"
+}

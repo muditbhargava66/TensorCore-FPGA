@@ -1,0 +1,66 @@
+# TinyTapeout project information
+# See: https://tinytapeout.com/specs/yaml/
+
+yaml_version: 6
+
+project:
+  title: "TensorCore 2x2 Systolic Array"
+  author: "TensorCore-FPGA Project"
+  description: "A 2x2 systolic array of MAC units demonstrating matrix multiplication acceleration for neural networks. Features weight-stationary dataflow, 8-bit signed arithmetic, and 50MHz operation."
+  language: "Verilog"
+  clock_hz: 50000000
+  tiles: "1x1"
+
+  # Source files (relative to src/tt/)
+  source_files:
+    - tt/ProcessingElement.v
+    - tt/SystolicArray2x2.v
+    - tt/tt_um_tensorcore.v
+  top_module: "tt_um_tensorcore"
+
+# Pin definitions
+pinout:
+  ui[0]: "data[0]"
+  ui[1]: "data[1]"
+  ui[2]: "data[2]"
+  ui[3]: "data[3]"
+  ui[4]: "data[4]"
+  ui[5]: "data[5]"
+  ui[6]: "row_select"
+  ui[7]: "mode[1]"
+  uo[0]: "result[0]"
+  uo[1]: "result[1]"
+  uo[2]: "result[2]"
+  uo[3]: "result[3]"
+  uo[4]: "result[4]"
+  uo[5]: "result[5]"
+  uo[6]: "result[6]"
+  uo[7]: "result[7]"
+  uio[0]: "overflow_pe00 / weight[0]"
+  uio[1]: "overflow_pe01 / weight[1]"
+  uio[2]: "overflow_pe10 / weight[2]"
+  uio[3]: "overflow_pe11 / weight[3]"
+  uio[4]: "pe_select[0] / weight[4]"
+  uio[5]: "pe_select[1] / weight[5]"
+  uio[6]: "col_select"
+  uio[7]: "state[1]"
+
+# Documentation
+documentation:
+  how_it_works: |
+    This design implements a 2x2 systolic array of Processing Elements (PEs),
+    a core building block for matrix multiplication in neural network accelerators.
+    
+    The array uses weight-stationary dataflow:
+    1. Load weights: Set mode=0b10, weights flow into PE registers
+    2. Compute: Set mode=0b11, activations stream through
+    3. Read results: Select PE via uio[7:6], result appears on uo_out
+
+  how_to_test: |
+    1. Reset (rst_n low, then high)
+    2. Clear: Set ui_in = 0x40 (mode=01)
+    3. Load weights: Set ui_in = 0x80, uio_in = weight_value
+    4. Compute: Set ui_in = 0xC0 | data, repeat for streaming
+    5. Read: Set uio_in[7:6] to select PE, read uo_out
+
+  external_hw: ""
