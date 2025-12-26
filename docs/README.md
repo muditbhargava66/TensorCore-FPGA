@@ -2,36 +2,65 @@
 
 Welcome to the TensorCore-FPGA documentation.
 
-## Contents
+---
+
+## 📚 Contents
 
 | Document | Description |
 |----------|-------------|
 | [Installation](INSTALL.md) | Setup guide for all platforms |
-| [Architecture](ARCHITECTURE.md) | Hardware architecture overview |
+| [Architecture](ARCHITECTURE.md) | System design and components |
 | [TinyTapeout](TINYTAPEOUT.md) | ASIC design for TinyTapeout |
 | [Simulation](SIMULATION.md) | Running tests and simulations |
+| [References](REFERENCES.md) | Research papers and resources |
 
 ---
 
-## Quick Links
+## 🚀 Quick Links
 
 - [GitHub Repository](https://github.com/muditbhargava66/TensorCore-FPGA)
 - [TinyTapeout](https://tinytapeout.com)
-- [OpenROAD](https://openroad.readthedocs.io)
+- [Skywater PDK](https://skywater-pdk.readthedocs.io/)
+- [OpenROAD](https://openroad.readthedocs.io/)
+- [Cocotb](https://www.cocotb.org/)
 
 ---
 
-## Project Overview
+## 📊 Project Statistics
 
-TensorCore-FPGA is a hardware accelerator for Large Language Model inference:
-
-- **Systolic Array**: Configurable MxN tile-based matrix multiplication
-- **Vector Processing**: FlashAttention-style Softmax
-- **Multi-Platform**: FPGA (PYNQ-Z1) and ASIC (TinyTapeout/SKY130)
+| Metric | Value |
+|--------|-------|
+| **RTL Modules** | 15+ |
+| **Test Cases** | 6 |
+| **EDA Tools** | 9 |
+| **Target Platforms** | 2 (FPGA + ASIC) |
 
 ---
 
-## Getting Started
+## 🛠️ Verification Tools
+
+| Tool | Command | Purpose |
+|------|---------|---------|
+| Cocotb | `cd test && make` | RTL simulation |
+| Verilator | `bash scripts/verilator_lint.sh` | Linting |
+| Yosys | `yosys scripts/synth_check.ys` | Synthesis |
+| ngspice | `ngspice -b sram_6t_read_svg.cir` | SPICE sim |
+| SymbiYosys | `sby -f scripts/formal_verify.sby` | Formal |
+
+---
+
+## 📈 Recent Updates (v1.2.0)
+
+- ✅ Added 4x4 systolic array (16 MACs)
+- ✅ Added formal verification scripts
+- ✅ Added power analysis script
+- ✅ Added timing constraints (50MHz)
+- ✅ Gate-level simulation support
+- ✅ Coverage analysis support
+
+---
+
+## 📖 Getting Started
 
 1. Clone the repository
 2. Follow [Installation Guide](INSTALL.md)

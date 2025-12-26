@@ -38,7 +38,7 @@ model/systemc/*/PE_Outputs/
 model/systemc/*/*.txt
 !model/systemc/sa_model/memory.txt
 
-# SPICE
+# SPICE outputs (keep .cir source files)
 model/spice/*.ps
 model/spice/*.png
 model/spice/*_data.txt
@@ -48,7 +48,6 @@ model/spice/*_data.txt
 # -----------------------------------------------------------------------------
 obj_dir/
 *.verilator
-*.d
 
 # -----------------------------------------------------------------------------
 # Vivado / Xilinx
@@ -74,20 +73,20 @@ vivado/build/
 *.srcs/
 webtalk*.jou
 webtalk*.log
-usage_statistics_webtalk.html
-usage_statistics_webtalk.xml
+usage_statistics_webtalk.*
 
 # -----------------------------------------------------------------------------
 # TinyTapeout / OpenLane
 # -----------------------------------------------------------------------------
 runs/
-!gds_render*.png
-!gds_render*.svg
 src/tt/config_merged.json
 src/tt/user_config.json
 src/includes.v
 
-# Scripts output
+# TT support tools (external repo)
+tt/
+
+# Scripts outputs
 scripts/reports/
 scripts/synth_generic.v
 
@@ -102,8 +101,9 @@ synth.json
 *.sdc.out
 
 # -----------------------------------------------------------------------------
-# macOS
+# OS Files
 # -----------------------------------------------------------------------------
+# macOS
 .DS_Store
 .AppleDouble
 .LSOverride
@@ -111,18 +111,14 @@ synth.json
 .Spotlight-V100
 .Trashes
 
-# -----------------------------------------------------------------------------
 # Windows
-# -----------------------------------------------------------------------------
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 *.lnk
 
-# -----------------------------------------------------------------------------
 # Linux
-# -----------------------------------------------------------------------------
 *~
 .nfs*
 
@@ -139,8 +135,7 @@ $RECYCLE.BIN/
 \#*\#
 .project
 .settings/
-*.sublime-workspace
-*.sublime-project
+*.sublime-*
 
 # -----------------------------------------------------------------------------
 # Python
@@ -155,13 +150,6 @@ venv/
 .env
 
 # -----------------------------------------------------------------------------
-# Documentation Build
-# -----------------------------------------------------------------------------
-docs/build/
-docs/_build/
-site/
-
-# -----------------------------------------------------------------------------
 # Logs & Temporary
 # -----------------------------------------------------------------------------
 *.log
@@ -169,18 +157,3 @@ site/
 *.temp
 .cache/
 *.pid
-
-# -----------------------------------------------------------------------------
-# Keep These (Explicit includes)
-# -----------------------------------------------------------------------------
-!src/tt/config.json
-!Resources/images/*.png
-!Resources/images/*.jpg
-!model/spice/*.cir
-!scripts/*.ys
-!scripts/*.sh
-tt/
-!src/tt/*.v
-!scripts/*.sdc
-!scripts/*.sby
-!scripts/*.sv
