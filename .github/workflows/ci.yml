@@ -8,7 +8,9 @@ on:
     branches: [main]
 
 jobs:
+  # ========================================
   # RTL Syntax Check
+  # ========================================
   syntax-check:
     name: RTL Syntax
     runs-on: ubuntu-latest
@@ -21,7 +23,9 @@ jobs:
       - name: Check TinyTapeout RTL
         run: iverilog -g2012 -o /dev/null src/tt/*.v
 
+  # ========================================
   # Cocotb Tests
+  # ========================================
   cocotb-tests:
     name: Cocotb Tests
     runs-on: ubuntu-latest
@@ -41,7 +45,9 @@ jobs:
           path: test/results.xml
           overwrite: true
 
+  # ========================================
   # Verilator Lint
+  # ========================================
   lint:
     name: Verilator Lint
     runs-on: ubuntu-latest
@@ -53,7 +59,9 @@ jobs:
         run: |
           verilator --lint-only -Wall src/tt/ProcessingElement.v src/tt/SystolicArray2x2.v src/tt/tt_um_tensorcore.v || true
 
+  # ========================================
   # Yosys Synthesis
+  # ========================================
   synthesis:
     name: Yosys Synthesis
     runs-on: ubuntu-latest
@@ -74,7 +82,9 @@ jobs:
           path: synth_*.log
           overwrite: true
 
-  # TinyTapeout Hardening (optional - requires PDK)
+  # ========================================
+  # TinyTapeout Hardening Check
+  # ========================================
   hardening:
     name: TT Hardening Check
     runs-on: ubuntu-latest
@@ -83,11 +93,31 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Install dependencies
-        run: |
-          pip install librelane volare
-          volare enable sky130 --pdk-root $HOME/.volare
+
+      # Use the official TinyTapeout volare-action
+      - name: Install PDK
+        uses: TinyTapeout/volare-action@v2
+        with:
+          pdk_name: sky130
+          pdk_version: 0fe599b2afb6708d281543108571e8571bf1677c
+          pdk_root: /home/runner/pdk
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install TT tools
+        run: pip install librelane
+
       - name: Create user config
-        run: python3 tt/tt_tool.py --create-user-config || true
-      - name: Check config
-        run: cat src/config.json || echo "Config check skipped"
+        run: |
+          if [ -f "tt/tt_tool.py" ]; then
+            python3 tt/tt_tool.py --create-user-config || echo "Config creation skipped"
+          else
+            echo "tt_tool.py not found - skipping"
+          fi
+
+      - name: Verify synthesis
+        run: |
+          yosys -p "read_verilog -sv src/tt/*.v; hierarchy -top tt_um_tensorcore; proc; opt; stat"
