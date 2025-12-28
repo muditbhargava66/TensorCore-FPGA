@@ -16,7 +16,7 @@
 
 ---
 
-## 🚀 Features
+## Features
 
 | Feature | Description |
 |---------|-------------|
@@ -30,7 +30,7 @@
 
 ---
 
-## 📊 Design Metrics
+## Design Metrics
 
 | Configuration | MACs | Cells | Wires | Target |
 |---------------|------|-------|-------|--------|
@@ -53,7 +53,7 @@
 
 ---
 
-## 🎯 ASIC Layout (TinyTapeout)
+## ASIC Layout (TinyTapeout)
 
 The design has been hardened for TinyTapeout using the SKY130 PDK:
 
@@ -67,7 +67,7 @@ The design has been hardened for TinyTapeout using the SKY130 PDK:
 
 ---
 
-## 📈 SPICE Simulation
+## SPICE Simulation
 
 6T SRAM cell characterization using ngspice (TSMC 180nm):
 
@@ -81,7 +81,7 @@ The design has been hardened for TinyTapeout using the SKY130 PDK:
 
 ---
 
-## 🛠️ Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -107,7 +107,7 @@ yosys scripts/synth_check.ys
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 TensorCore-FPGA/
@@ -129,7 +129,7 @@ TensorCore-FPGA/
 
 ---
 
-## 🔧 EDA Tools
+## EDA Tools
 
 | Tool | Purpose | Status |
 |------|---------|--------|
@@ -144,7 +144,7 @@ TensorCore-FPGA/
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -168,7 +168,7 @@ TensorCore-FPGA/
 
 ---
 
-## 📖 Documentation
+## Documentation
 
 | Document | Description |
 |----------|-------------|
@@ -180,7 +180,7 @@ TensorCore-FPGA/
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -189,13 +189,13 @@ TensorCore-FPGA/
 
 ---
 
-## 📄 License
+## License
 
 Apache License 2.0 - See [LICENSE](LICENSE)
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [TinyTapeout](https://tinytapeout.com) - ASIC platform
 - [Skywater PDK](https://skywater-pdk.readthedocs.io/) - Open PDK
