@@ -24,6 +24,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - `.gitignore` blocking pattern removed
 - README emoji cleanup
 
+### GDS Regenerated
+- Die Size: 219.7µm × 223.3µm (was 196.2µm × 201.5µm)
+- Cell Count: 107 (was 88)
+- File Size: 6.5 MB (was 5.0 MB)
+
 ---
 
 ## [1.3.0] - 2025-12-27

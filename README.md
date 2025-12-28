@@ -24,7 +24,10 @@
 | **24-bit Accumulator** | Extended precision for many accumulations |
 | **Weight Double-Buffering** | Overlap weight loading with computation |
 | **INT8 Quantization** | 8-bit signed arithmetic with saturation |
-| **VPU** | L2 Normalization + FlashAttention Softmax |
+| **VPU Mini** | L2 Norm, ReLU, PassThru operations |
+| **Softmax Unit** | INT8 softmax with lookup table |
+| **FIFO Buffers** | Input/output data staging |
+| **SPI Interface** | External weight loading protocol |
 | **Multi-Target** | FPGA (PYNQ-Z1) + ASIC (TinyTapeout/SKY130) |
 | **AXI4-Lite** | PS-PL control interface |
 
@@ -46,10 +49,10 @@
 
 | Check | Status |
 |-------|--------|
-| Cocotb Tests | ✅ 6/6 Passing |
-| Yosys Synthesis | ✅ 199 cells (2x2) |
-| Verilator Lint | ✅ Clean |
-| SPICE Simulation | ✅ 2,134 rows |
+| Cocotb Tests | 6/6 Passing |
+| Yosys Synthesis | 199 cells (2x2) |
+| Verilator Lint | Clean |
+| SPICE Simulation | 2,134 rows |
 
 ---
 
@@ -60,10 +63,11 @@ The design has been hardened for TinyTapeout using the SKY130 PDK:
 ![TensorCore GDS Layout](docs/images/gds_render.png)
 
 **Layout Specifications:**
-- **Die Size:** 196.2 µm × 201.5 µm
-- **Cell Count:** 88 standard cells
+- **Die Size:** 219.7 µm × 223.3 µm
+- **Cell Count:** 107 standard cells
 - **Layers:** 40 metal/via layers
 - **PDK:** Skywater SKY130
+- **GDS File:** 6.5 MB
 
 ---
 
@@ -165,18 +169,6 @@ TensorCore-FPGA/
 │  └─────────────┘                      └──────────────────┘   │
 └──────────────────────────────────────────────────────────────┘
 ```
-
----
-
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [Installation](docs/INSTALL.md) | Setup guide |
-| [Architecture](docs/ARCHITECTURE.md) | System design |
-| [TinyTapeout](docs/TINYTAPEOUT.md) | ASIC guide |
-| [Simulation](docs/SIMULATION.md) | Running tests |
-| [Changelog](CHANGELOG.md) | Version history |
 
 ---
 
