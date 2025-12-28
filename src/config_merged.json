@@ -1,0 +1,39 @@
+{
+  "DESIGN_NAME": "tt_um_tensorcore",
+  "VERILOG_FILES": [
+    "dir::tt/ProcessingElement.v",
+    "dir::tt/SystolicArray2x2.v",
+    "dir::tt/tt_um_tensorcore.v"
+  ],
+  "CLOCK_PORT": "clk",
+  "CLOCK_PERIOD": 20.0,
+  "pdk::sky130*": {
+    "CLOCK_PERIOD": 20.0,
+    "FP_CORE_UTIL": 50,
+    "PL_TARGET_DENSITY": 0.55,
+    "SYNTH_STRATEGY": "AREA 2",
+    "FP_PDN_MULTILAYER": true,
+    "SYNTH_MAX_FANOUT": 8
+  },
+  "FP_SIZING": "relative",
+  "FP_CORE_UTIL": 50,
+  "PL_BASIC_PLACEMENT": false,
+  "PL_TIME_DRIVEN": true,
+  "PL_ROUTABILITY_DRIVEN": true,
+  "GLB_RT_ADJUSTMENT": 0.15,
+  "GLB_RT_OVERFLOW_ITERS": 50,
+  "ROUTING_CORES": 4,
+  "RUN_CVC": false,
+  "RUN_KLAYOUT_XOR": false,
+  "RUN_KLAYOUT_DRC": true,
+  "DIODE_INSERTION_STRATEGY": 4,
+  "RUN_LINTER": true,
+  "LINTER_INCLUDE_PDK_MODELS": true,
+  "QUIT_ON_TIMING_VIOLATIONS": false,
+  "QUIT_ON_HOLD_VIOLATIONS": false,
+  "DIE_AREA": "0 0 161.00 111.52",
+  "FP_DEF_TEMPLATE": "dir::../tt/tech/sky130A/def/tt_block_1x1_pg.def",
+  "VDD_PIN": "VPWR",
+  "GND_PIN": "VGND",
+  "RT_MAX_LAYER": "met4"
+}

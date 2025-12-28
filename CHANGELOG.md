@@ -6,7 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
-## [1.4.0] - 2024-12-28
+## [1.4.0] - 2025-12-28
 
 ### Added
 - **FIFO Buffer** (`FIFO.v`) - 8x8 sync FIFO, 36 cells
@@ -26,7 +26,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
-## [1.3.0] - 2024-12-27
+## [1.3.0] - 2025-12-27
 
 ### Added
 - **24-bit Accumulator** - Extended precision
@@ -41,7 +41,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
-## [1.2.0] - 2024-12-26
+## [1.2.0] - 2025-12-26
 
 ### Added
 - Formal verification scripts
@@ -52,7 +52,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
-## [1.1.0] - 2024-12-26
+## [1.1.0] - 2025-12-26
 
 ### Added
 - TinyTapeout integration
@@ -63,7 +63,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
-## [1.0.0] - 2024-12-25
+## [1.0.0] - 2025-11-25
 
 ### Added
 - Initial TensorCore architecture
@@ -78,8 +78,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 1.4.0 | 2024-12-28 | FIFO, SPI, Softmax, VPU Mini, Docs |
-| 1.3.0 | 2024-12-27 | 24-bit acc, double-buffering |
-| 1.2.0 | 2024-12-26 | Formal, power, timing |
-| 1.1.0 | 2024-12-26 | TinyTapeout integration |
-| 1.0.0 | 2024-12-25 | Initial release |
+| 1.4.0 | 2025-12-28 | FIFO, SPI, Softmax, VPU Mini, Docs |
+| 1.3.0 | 2025-12-27 | 24-bit acc, double-buffering |
+| 1.2.0 | 2025-12-26 | Formal, power, timing |
+| 1.1.0 | 2025-12-26 | TinyTapeout integration |
+| 1.0.0 | 2025-11-25 | Initial release |

@@ -1,0 +1,30 @@
+# Makefile for testing new v1.4.0 modules
+
+SIM = icarus
+TOPLEVEL_LANG = verilog
+
+# FIFO Test
+fifo:
+	MODULE=test_new_modules \
+	TOPLEVEL=tb_fifo \
+	VERILOG_SOURCES=../src/tt/FIFO.v,tb_fifo.v \
+	$(MAKE) -f $(shell cocotb-config --makefiles)/Makefile.sim
+
+# VPU Mini Test
+vpu:
+	MODULE=test_new_modules \
+	TOPLEVEL=tb_vpu \
+	VERILOG_SOURCES=../src/tt/VPU_Mini.v,tb_vpu.v \
+	$(MAKE) -f $(shell cocotb-config --makefiles)/Makefile.sim
+
+# Softmax Test
+softmax:
+	MODULE=test_new_modules \
+	TOPLEVEL=tb_softmax \
+	VERILOG_SOURCES=../src/tt/SoftmaxUnit.v,tb_softmax.v \
+	$(MAKE) -f $(shell cocotb-config --makefiles)/Makefile.sim
+
+clean:
+	rm -rf sim_build __pycache__ *.vcd results.xml
+
+.PHONY: fifo vpu softmax clean
