@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.4.0] - 2024-12-28
+
+### Added
+- **FIFO Buffer** (`FIFO.v`) - 8x8 sync FIFO, 36 cells
+- **SPI Slave** (`SPI_Slave.v`) - Mode 0 weight loading, 32 cells
+- **Softmax Unit** (`SoftmaxUnit.v`) - INT8 softmax with LUT, 92 cells
+- **VPU Mini** (`VPU_Mini.v`) - L2 Norm, ReLU, PassThru, 102 cells
+- **OpenRAM Config** (`openram_tt.py`) - 256x8 SRAM configuration
+
+### Fixed
+- `.gitignore` blocking pattern removed
+
+---
+
 ## [1.3.0] - 2024-12-27
 
 ### Added

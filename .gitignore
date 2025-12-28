@@ -84,7 +84,6 @@ src/tt/user_config.json
 src/includes.v
 
 # TT support tools (external repo)
-tt/
 
 # Scripts outputs
 scripts/reports/
