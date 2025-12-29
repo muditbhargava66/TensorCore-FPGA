@@ -41,14 +41,27 @@ create_project $project_name $project_dir -part $part -force
 # Add Source Files
 # =============================================================================
 
-# Add RTL core files
-set rtl_files [glob -nocomplain $rtl_dir/*.v]
-if {[llength $rtl_files] > 0} {
-    add_files -norecurse $rtl_files
-    puts "Added [llength $rtl_files] RTL files from $rtl_dir"
+# Add RTL core files (synthesizable modules)
+# Note: Some core files (VPU.v, MatMul_Controller.v) are behavioral only
+# We use their _Synth counterparts from vivado/src instead
+set synth_core_files [list \
+    "$rtl_dir/PE.v" \
+    "$rtl_dir/PE_Synth.v" \
+    "$rtl_dir/MAC.v" \
+    "$rtl_dir/SA_MxN.v" \
+    "$rtl_dir/SA_MxN_Synth.v" \
+    "$rtl_dir/PerfMonitor.v" \
+    "$rtl_dir/VPU_Synth.v" \
+]
+
+foreach f $synth_core_files {
+    if {[file exists $f]} {
+        add_files -norecurse $f
+        puts "Added core file: $f"
+    }
 }
 
-# Add Vivado wrapper sources
+# Add all Vivado wrapper/synthesizable sources
 set vivado_files [glob -nocomplain $vivado_src/*.v]
 if {[llength $vivado_files] > 0} {
     add_files -norecurse $vivado_files
@@ -56,7 +69,7 @@ if {[llength $vivado_files] > 0} {
 }
 
 # Add include directories for `include directives
-set_property include_dirs [list $include_dir $rtl_dir] [current_fileset]
+set_property include_dirs [list $include_dir $rtl_dir $vivado_src] [current_fileset]
 
 # =============================================================================
 # Add Constraints (PYNQ-Z1)

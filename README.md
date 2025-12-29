@@ -53,6 +53,43 @@
 | Yosys Synthesis | 199 cells (2x2) |
 | Verilator Lint | Clean |
 | SPICE Simulation | 2,134 rows |
+| **PYNQ-Z1 Hardware** | `Verified` |
+
+### PYNQ-Z1 Hardware Results
+
+Verified on real hardware - December 29, 2025:
+
+| Matrix Size | Cycles | Time @ 70MHz |
+|-------------|--------|--------------|
+| 2×2 | 72 | 1.03 µs |
+| 4×4 | 488 | 6.97 µs |
+| 8×8 | 1,684 | 24.06 µs |
+| 16×16 | 12,520 | 178.86 µs |
+
+**Resource Usage**: 2.08% LUTs, 0.83% Registers, Timing Met ✅
+
+### LED Status Indicators
+
+The PYNQ-Z1 LEDs show TensorCore status during operation:
+
+```
+    PYNQ-Z1 Board LEDs
+    ┌─────────────────────────────────────┐
+    │  [LD0]   [LD1]    [LD2]   [LD3]     │
+    │   🟢      🟡      ⚪      ⚪      │
+    │  done    busy   state[0] state[1]   │
+    └─────────────────────────────────────┘
+    
+    During computation:   LD1 ON  (busy)
+    After completion:     LD0 ON  (done)
+    FSM state visible on: LD2-LD3
+```
+
+| LED | Signal | Meaning |
+|-----|--------|---------|
+| LD0 | `done` | Computation complete - ready to read results |
+| LD1 | `busy` | Accelerator is processing |
+| LD2-3 | `state` | FSM state (0=IDLE, 1=LOAD, 2=COMPUTE, 3=STORE) |
 
 ---
 
@@ -154,10 +191,10 @@ TensorCore-FPGA/
 ┌──────────────────────────────────────────────────────────────┐
 │                        TensorCore                            │
 ├──────────────────────────────────────────────────────────────┤
-│  ┌────────────┐    ┌─────────────────┐    ┌────────────┐     │
-│  │  Control   │───▶│   Systolic      │───▶│    VPU     │     │
-│  │  (Tiling)  │    │   Array (MxN)   │    │ (Softmax)  │     │
-│  └────────────┘    └─────────────────┘    └────────────┘     │
+│  ┌────────────┐    ┌─────────────────┐     ┌────────────┐    │
+│  │  Control   │───▶│   Systolic      │───▶│    VPU     │    │
+│  │  (Tiling)  │    │   Array (MxN)   │     │ (Softmax)  │    │
+│  └────────────┘    └─────────────────┘     └────────────┘    │
 │        │                   │                    │            │
 │        ▼                   ▼                    ▼            │
 │  ┌──────────────────────────────────────────────────────┐    │

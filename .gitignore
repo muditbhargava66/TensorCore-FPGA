@@ -156,3 +156,12 @@ venv/
 *.temp
 .cache/
 *.pid
+
+# -----------------------------------------------------------------------------
+# PYNQ Board Artifacts
+# -----------------------------------------------------------------------------
+# Keep pynq/notebooks/*.ipynb (with outputs) as proof of hardware verification
+# Exclude board-side files if accidentally copied
+jupyter_notebooks/
+.ipynb_checkpoints/
+

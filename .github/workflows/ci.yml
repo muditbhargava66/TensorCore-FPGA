@@ -91,8 +91,6 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       # Use the official TinyTapeout volare-action with valid version
       - name: Install PDK
@@ -105,7 +103,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Verify PDK installation
         run: |

@@ -21,6 +21,31 @@ import numpy as np
 from typing import Optional, Tuple
 
 
+# =============================================================================
+# Fixed-Point Conversion Utilities (Q16.16 format)
+# =============================================================================
+
+def float_to_q16_16(value: float) -> int:
+    """Convert float to Q16.16 fixed-point representation."""
+    return int(value * 65536) & 0xFFFFFFFF
+
+def q16_16_to_float(value: int) -> float:
+    """Convert Q16.16 fixed-point to float."""
+    # Handle signed 32-bit
+    if value >= 0x80000000:
+        value = value - 0x100000000
+    return value / 65536.0
+
+def array_to_q16_16(arr: np.ndarray) -> np.ndarray:
+    """Convert numpy array to Q16.16 fixed-point (as uint32)."""
+    return (arr * 65536).astype(np.int32).view(np.uint32)
+
+def q16_16_to_array(arr: np.ndarray) -> np.ndarray:
+    """Convert Q16.16 fixed-point array back to float."""
+    signed = arr.view(np.int32)
+    return signed.astype(np.float32) / 65536.0
+
+
 class TensorCoreDriver:
     """
     Driver for TensorCore accelerator on PYNQ-Z1.
@@ -228,6 +253,91 @@ class TensorCoreDriver:
         }
     
     # =========================================================================
+    # DMA and Buffer Management
+    # =========================================================================
+    
+    def allocate_buffers(self, max_dim: int = 16):
+        """
+        Allocate contiguous DMA buffers for matrix operations.
+        
+        Args:
+            max_dim: Maximum matrix dimension to support
+            
+        Note: This allocates physically contiguous memory that can be
+        accessed by both PS and PL. The buffers persist until explicitly freed.
+        """
+        from pynq import allocate
+        
+        # Calculate buffer sizes (Q16.16 = 4 bytes per element)
+        max_elements = max_dim * max_dim
+        
+        # Allocate buffers for A, W, and C matrices
+        self.buf_A = allocate(shape=(max_dim, max_dim), dtype=np.uint32)
+        self.buf_W = allocate(shape=(max_dim, max_dim), dtype=np.uint32)
+        self.buf_C = allocate(shape=(max_dim, max_dim), dtype=np.uint32)
+        
+        # Store physical addresses for PL access
+        self.phys_addr_A = self.buf_A.device_address
+        self.phys_addr_W = self.buf_W.device_address
+        self.phys_addr_C = self.buf_C.device_address
+        
+        self._buffers_allocated = True
+        self._max_dim = max_dim
+        
+        return self.buf_A, self.buf_W, self.buf_C
+    
+    def free_buffers(self):
+        """Free allocated DMA buffers."""
+        if hasattr(self, '_buffers_allocated') and self._buffers_allocated:
+            self.buf_A.freebuffer()
+            self.buf_W.freebuffer()
+            self.buf_C.freebuffer()
+            self._buffers_allocated = False
+    
+    def write_matrix_to_bram(self, matrix: np.ndarray, base_addr: int):
+        """
+        Write matrix to accelerator's internal BRAM via MMIO.
+        
+        Args:
+            matrix: Input numpy array (float or Q16.16 uint32)
+            base_addr: Base address offset in BRAM
+            
+        Note: This writes directly to the on-chip BRAM mapped in the PL.
+        For larger matrices, consider using external DDR with AXI DMA.
+        """
+        # Convert to Q16.16 if needed
+        if matrix.dtype in [np.float32, np.float64]:
+            data = array_to_q16_16(matrix.astype(np.float32))
+        else:
+            data = matrix.astype(np.uint32)
+        
+        # Flatten and write word by word
+        flat = data.flatten()
+        for i, val in enumerate(flat):
+            # Write to memory via MMIO extension (if available)
+            # For now, this is a placeholder - real implementation
+            # depends on memory-mapped BRAM interface
+            pass
+        
+        return len(flat)
+    
+    def read_matrix_from_bram(self, rows: int, cols: int, base_addr: int) -> np.ndarray:
+        """
+        Read matrix from accelerator's internal BRAM via MMIO.
+        
+        Args:
+            rows: Number of rows
+            cols: Number of columns
+            base_addr: Base address offset in BRAM
+            
+        Returns:
+            numpy array in float format
+        """
+        # Placeholder - real implementation depends on memory interface
+        result = np.zeros((rows, cols), dtype=np.uint32)
+        return q16_16_to_array(result)
+    
+    # =========================================================================
     # High-Level Operations
     # =========================================================================
     
@@ -237,43 +347,75 @@ class TensorCoreDriver:
         Perform matrix multiplication C = A @ W.
         
         Args:
-            A: Input matrix (K1 x K2)
-            W: Weight matrix (K2 x K3)
+            A: Input matrix (K1 x K2) as float numpy array
+            W: Weight matrix (K2 x K3) as float numpy array
             vpu_op: Optional VPU post-processing (0=Norm, 1=Softmax)
             
         Returns:
             Tuple of (result matrix, performance dict)
+            
+        Note: Current implementation runs computation in accelerator but
+        returns software-computed result (DMA data path not yet connected).
         """
         k1, k2 = A.shape
         k2_w, k3 = W.shape
         
         assert k2 == k2_w, f"Dimension mismatch: A.cols={k2}, W.rows={k2_w}"
+        assert k1 <= 255 and k2 <= 255 and k3 <= 255, "Dimensions must be <= 255"
         
-        # TODO: DMA transfer matrices to PL memory
-        # For now, this is a placeholder
+        # Reset before new computation
+        self.reset()
         
-        # Configure
+        # Configure dimensions
         self.configure(k1, k2, k3)
         
         if vpu_op is not None:
             self.set_vpu_operation(vpu_op)
         
-        # Run
+        # Start accelerator
         self.start(vpu_enable=(vpu_op is not None))
+        
+        # Wait for completion
         success = self.wait_done()
         
         if not success:
             raise TimeoutError("TensorCore computation timed out")
         
-        # Get performance
+        # Get performance metrics
         perf = self.get_performance()
         
-        # TODO: DMA transfer result from PL memory
-        # For now, compute in software as placeholder
+        # Compute result in software (until DMA data path is connected)
+        # The accelerator is running but we can't read results yet
         C = A @ W
         
         return C, perf
     
+    def benchmark(self, sizes: list = [2, 4, 8, 16]) -> dict:
+        """
+        Run benchmark across different matrix sizes.
+        
+        Args:
+            sizes: List of matrix dimensions to test
+            
+        Returns:
+            Dictionary with size -> cycles mapping
+        """
+        results = {}
+        
+        for size in sizes:
+            self.reset()
+            self.configure(size, size, size)
+            self.start()
+            self.wait_done()
+            results[size] = self.perf_cycles
+            
+        return results
+    
     def __repr__(self) -> str:
         status = "BUSY" if self.is_busy else ("DONE" if self.is_done else "IDLE")
         return f"TensorCoreDriver(status={status}, state={self.state})"
+    
+    def __del__(self):
+        """Cleanup: free buffers when driver is deleted."""
+        self.free_buffers()
+

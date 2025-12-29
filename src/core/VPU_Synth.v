@@ -58,16 +58,11 @@ module VPU_Synth #(
         end
     endgenerate
     
-    // Output array
+    // Output array - stores normalized values
     reg signed [`FP_WIDTH-1:0] norm_out [0:VECTOR_SIZE-1];
     
-    // Pack outputs using generate (constant indices required)
-    genvar p;
-    generate
-        for (p = 0; p < VECTOR_SIZE; p = p + 1) begin : pack_output
-            assign vec_out_norm_flat[`FP_WIDTH*(p+1)-1:`FP_WIDTH*p] = norm_out[p];
-        end
-    endgenerate
+    // Output packing is done in the FINISH state procedurally
+    // (Cannot use continuous assign from reg array to reg output)
     
     // =========================================================================
     // Approximate Inverse Square Root (Fast InvSqrt inspired by Quake III)
@@ -142,6 +137,7 @@ module VPU_Synth #(
             exp_sum <= 0;
             weighted_sum <= 0;
             scalar_out_softmax <= 0;
+            vec_out_norm_flat <= {(`FP_WIDTH*VECTOR_SIZE){1'b0}};
             for (i = 0; i < VECTOR_SIZE; i = i + 1) begin
                 norm_out[i] <= 0;
             end
@@ -231,6 +227,11 @@ module VPU_Synth #(
                     // For softmax, output = weighted_sum / exp_sum
                     if (op_sel == 1 && exp_sum != 0) begin
                         scalar_out_softmax <= (weighted_sum[`FP_WIDTH-1:0] * `FP_ONE) / exp_sum[`FP_WIDTH-1:0];
+                    end
+                    
+                    // Pack norm output array to output bus (unroll for synthesis)
+                    for (i = 0; i < VECTOR_SIZE; i = i + 1) begin
+                        vec_out_norm_flat[`FP_WIDTH*(i+1)-1 -: `FP_WIDTH] <= norm_out[i];
                     end
                     
                     state <= IDLE;
